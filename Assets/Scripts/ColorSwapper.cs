@@ -18,7 +18,8 @@ public class ColorSwapper : MonoBehaviour {
 	void Update () {
 		
 	}
-	
+
+	//TODO: Probably animte the color changes, also get rid of box colliders for the necessary color
 	IEnumerator SwapColorEnumerator () {
 		while (true) {
 			currentColorIndex++;
