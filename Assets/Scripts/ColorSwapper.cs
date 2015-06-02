@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 
 public class ColorSwapper : MonoBehaviour {
@@ -6,21 +7,24 @@ public class ColorSwapper : MonoBehaviour {
 	public int bpm = 60;
 	public float swapTime = 5f;
 	public bool swapping = true;
-	
-	private string[] colorsList;
-	private int currentColorIndex = 0;
+	public BlockColors[] colorsList;
 
+	public RectTransform colorIndicatorHolder;
+	public GameObject colorIndicatorPrefab;
+	
+	private int currentColorIndex = 0;
 	private BlockColors prevColor;
 
-	private Transform whiteBlocksHolder;
-	private Transform blackBlocksHolder;
+	//Containers for different colored blocks
+	private GameObject whiteBlocksHolder;
+	private GameObject blackBlocksHolder;
 	
 	// Use this for initialization
 	void Start () {
-		colorsList = System.Enum.GetNames (typeof(BlockColors));
 		swapTime = bpm / 60.0f;
-		whiteBlocksHolder = GameObject.Find ("WhiteBlocks").transform;
-		blackBlocksHolder = GameObject.Find ("BlackBlocks").transform;
+		whiteBlocksHolder = GameObject.Find ("WhiteBlocks");
+		blackBlocksHolder = GameObject.Find ("BlackBlocks");
+		PopulateColorIndicator ();
 		StartCoroutine (SwapColorEnumerator ());
 	}
 	
@@ -29,45 +33,59 @@ public class ColorSwapper : MonoBehaviour {
 		
 	}
 
+	// Add the colors to the indicator bar at the bottom of the screen
+	void PopulateColorIndicator () {
+		foreach (BlockColors color in colorsList) {
+			GameObject newIndicator = Instantiate(colorIndicatorPrefab);
+			if(color != BlockColors.None) {
+				newIndicator.GetComponent<Image>().color = ToColor((int)color);
+			}
+			newIndicator.GetComponent<RectTransform>().SetParent(colorIndicatorHolder);
+		}
+	}
+
 	//TODO: Probably animte the color changes, also get rid of box colliders for the necessary color
 	IEnumerator SwapColorEnumerator () {
 		while (true && swapping) {
-			//Re-enable previous color blocks
-			EnableBlockColliders(prevColor);
-
+			//Move to the next color
 			currentColorIndex++;
 			currentColorIndex %= colorsList.Length;
-			BlockColors curColor = (BlockColors)System.Enum.Parse(typeof(BlockColors), colorsList[currentColorIndex]);
-			prevColor = curColor;
-			Camera.main.backgroundColor = ToColor((int)curColor);
+			BlockColors curColor = colorsList[currentColorIndex];
+			//If the color doesn't change, don't enable the previous blocks
+			if(curColor != BlockColors.None) {
+				//Re-enable previous color blocks
+				EnableBlockColliders(prevColor);
+				prevColor = curColor;
+				Camera.main.backgroundColor = ToColor((int)curColor);
+				//Disable current color blocks
+				DisableBlockColliders(curColor);
+			}
 
-			//Disable current color blocks
-			DisableBlockColliders(curColor);
 			yield return new WaitForSeconds(swapTime);
 		}
 	}
 
+	// Enable blocks of the specified color
 	void EnableBlockColliders (BlockColors color) {
 		ToggleBlockColliders(color, true);
 	}
 
+	// Disable blocks of the specified color
 	void DisableBlockColliders (BlockColors color) {
 		ToggleBlockColliders(color, false);
 	}
 
+	//Enable/disable blocks of a specific color
 	void ToggleBlockColliders (BlockColors color, bool enable) {
 		switch (color) {
 		case BlockColors.Black:
-			for(int i = 0; i < blackBlocksHolder.childCount; i++) {
-				Transform block = blackBlocksHolder.GetChild(i);
-				block.gameObject.SetActive(enable);
-			}
+			blackBlocksHolder.SetActive(enable);
 			break;
 		case BlockColors.White:
-			for(int i = 0; i < whiteBlocksHolder.childCount; i++) {
-				Transform block = whiteBlocksHolder.GetChild(i);
-				block.gameObject.SetActive(enable);
-			}
+			whiteBlocksHolder.SetActive(enable);
+			break;
+		//Do nothing for a None color
+		case BlockColors.None:
 			break;
 		}
 	}

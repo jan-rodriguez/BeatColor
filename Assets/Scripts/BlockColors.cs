@@ -6,4 +6,5 @@
 //	Orange = 0xFF9800,
 	Black = 0x000000,
 	White = 0xFFFFFF,
+	None = -1,
 }
