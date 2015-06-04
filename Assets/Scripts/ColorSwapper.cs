@@ -35,10 +35,14 @@ public class ColorSwapper : MonoBehaviour {
 
 	// Add the colors to the indicator bar at the bottom of the screen
 	void PopulateColorIndicator () {
-		foreach (BlockColors color in colorsList) {
+		for (int i =0; i < colorsList.Length; i++) {
+			BlockColors color = colorsList[i];
+
 			GameObject newIndicator = Instantiate(colorIndicatorPrefab);
 			if(color != BlockColors.None) {
 				newIndicator.GetComponent<Image>().color = ToColor((int)color);
+			}else{
+				newIndicator.GetComponent<Image>().sprite = new Sprite();
 			}
 			newIndicator.GetComponent<RectTransform>().SetParent(colorIndicatorHolder);
 		}
